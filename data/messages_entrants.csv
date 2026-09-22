@@ -1,0 +1,51 @@
+message_id,date,texte,_categorie_vraie,_ambigu
+M-001,2026-03-14,Bonjour ma commande CMD-1013 devait arriver le 14 fevrier et je n'ai toujours rien recu,livraison,0
+M-002,2026-03-14,Je souhaite retourner mon aspirateur il ne me convient pas comment faire,retour_remboursement,0
+M-003,2026-03-14,Impossible de me connecter a mon compte le mot de passe ne fonctionne plus,compte,0
+M-004,2026-03-13,Est ce que la chaise de bureau supporte plus de 120 kg,produit,0
+M-005,2026-03-13,J'ai ete debite deux fois pour la meme commande merci de verifier,paiement,0
+M-006,2026-03-13,Bonjour je voulais juste vous remercier pour la rapidite de la livraison,autre,0
+M-007,2026-03-13,Toujours rien recu et le suivi ne bouge plus depuis 3 jours,livraison,0
+M-008,2026-03-12,Le robot patissier fuit de partout des la premiere utilisation je veux etre rembourse,retour_remboursement,0
+M-009,2026-03-12,Comment supprimer definitivement mon compte et mes donnees,compte,0
+M-010,2026-03-12,Peut on payer en plusieurs fois pour un panier de 80 euros,paiement,0
+M-011,2026-03-12,Le produit recu ne correspond pas du tout a la photo du site,produit,0
+M-012,2026-03-11,Ras finalement colis bien recu mais un peu abime sur un coin,livraison,1
+M-013,2026-03-11,Pas convaincu par la cafetiere je sais pas trop si je la garde ou pas,retour_remboursement,1
+M-014,2026-03-11,Rien de special juste une question sur la garantie du produit,produit,0
+M-015,2026-03-10,Bonjour possible de changer l'adresse de livraison ma commande est encore en preparation,livraison,0
+M-016,2026-03-10,Toujours pas de remboursement alors que j'ai retourne l'article il y a 10 jours,retour_remboursement,0
+M-017,2026-03-10,Suite a mon appel de hier pas de nouvelles depuis,autre,1
+M-018,2026-03-10,Le paiement en 3 fois a ete refuse sans explication,paiement,0
+M-019,2026-03-09,J'aimerais changer l'email associe a mon compte,compte,0
+M-020,2026-03-09,Colis marque livre mais rien trouve devant chez moi,livraison,0
+M-021,2026-03-09,Interesse par l'enceinte bluetooth existe t elle en une autre couleur,produit,0
+M-022,2026-03-09,Vous pouvez verifier un point svp pas urgent,autre,1
+M-023,2026-03-08,Je veux annuler ma commande avant expedition,livraison,1
+M-024,2026-03-08,Deux prelevements constates sur mon compte bancaire pour un seul achat,paiement,0
+M-025,2026-03-08,Le produit ne s'allume plus au bout de 3 jours je veux un remboursement immediat,retour_remboursement,0
+M-026,2026-03-07,Compte bloque suite a plusieurs tentatives de connexion,compte,0
+M-027,2026-03-07,Retour envoye depuis une semaine et toujours aucune nouvelle de votre entrepot,retour_remboursement,0
+M-028,2026-03-07,Question technique la trottinette est elle pliable,produit,0
+M-029,2026-03-07,Bonjour,autre,1
+M-030,2026-03-06,Livraison prevue demain mais je ne serai pas la possible de reporter,livraison,0
+M-031,2026-03-06,Vu la qualite recue je pense la retourner mais pas totalement decide,retour_remboursement,1
+M-032,2026-03-06,Le moyen de paiement PayPal n'apparait plus au moment de payer,paiement,0
+M-033,2026-03-06,Mon adresse postale est fausse sur ma derniere commande comment corriger,compte,1
+M-034,2026-03-05,Toujours en attente depuis l'ouverture du ticket rien de concret pour l'instant,autre,1
+M-035,2026-03-05,Le plaid recu sent tres fort la colle est ce normal,produit,0
+M-036,2026-03-05,Remboursement demande le 20 fevrier toujours rien recu sur mon compte,retour_remboursement,0
+M-037,2026-03-05,Puis je payer par virement bancaire,paiement,0
+M-038,2026-03-04,Livraison en point relais possible pour ma prochaine commande,livraison,0
+M-039,2026-03-04,Envie de supprimer mes informations personnelles de vos serveurs,compte,0
+M-040,2026-03-04,Depuis la mise a jour du site impossible de retrouver mes anciennes commandes,compte,1
+M-041,2026-03-04,Le produit correspond bien a la description rien a signaler,produit,1
+M-042,2026-03-03,Deja le troisieme email pour le meme probleme de retard,livraison,0
+M-043,2026-03-03,Retour accepte mais montant rembourse inferieur au prix paye,retour_remboursement,0
+M-044,2026-03-03,Facture disponible en telechargement quelque part,paiement,1
+M-045,2026-03-02,Encore un souci avec ma commande cette fois c'est le paiement qui a echoue deux fois,paiement,0
+M-046,2026-03-02,Le produit est different de celui commande erreur de reference visiblement,produit,0
+M-047,2026-03-02,Compte cree mais aucun email de confirmation recu,compte,0
+M-048,2026-03-01,Article manquant dans le colis recu aujourd'hui,livraison,1
+M-049,2026-03-01,Souhaite juste feliciter le service client tres reactif au telephone,autre,0
+M-050,2026-03-01,Delai de retour depasse de deux jours seulement possible de faire une exception,retour_remboursement,1

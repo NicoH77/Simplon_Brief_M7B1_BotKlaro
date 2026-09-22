@@ -1,0 +1,15 @@
+# Module 7 bis - Klaro : dependances
+#
+# Les 4 agents s'appuient tous sur un vrai modele Mistral : il n'y a pas de
+# mode hors ligne. Avant de lancer quoi que ce soit, copiez .env.example en
+# .env et renseignez MISTRAL_API_KEY (cle recuperee sur
+# https://console.mistral.ai/, chargee automatiquement par config.py).
+
+pandas>=2.0
+numpy>=1.26
+python-dotenv>=1.0
+
+# --- Agent LangChain + Mistral ---
+langchain>=1.4
+langgraph>=1.2
+langchain-mistralai>=1.1

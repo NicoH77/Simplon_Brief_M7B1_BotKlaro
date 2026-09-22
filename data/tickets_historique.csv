@@ -1,0 +1,19 @@
+ticket_id,date,sujet,resolution
+T-501,2026-01-08,Aspirateur X200 bruit anormal,Echange standard accepte hors delai car defaut de fabrication confirme par le SAV
+T-502,2026-01-12,Retard livraison trottinette Urban,Ouverture reclamation transporteur remboursement des frais de port
+T-503,2026-01-15,Double debit carte bancaire,Remboursement du doublon sous 48h apres verification service paiement
+T-504,2026-01-20,Robot patissier piece manquante,Envoi de la piece manquante sans nouvelle commande
+T-505,2026-01-25,Demande suppression compte RGPD,Suppression effectuee sous 30 jours conformement a la politique de confidentialite
+T-506,2026-02-02,Chaise ergonomique montage difficile,Envoi notice video renforcee pas de remboursement
+T-507,2026-02-05,Retour hors delai plaid polaire,Refus du retour car delai de 14 jours depasse de 20 jours
+T-508,2026-02-09,Enceinte Sona ne s'allume plus,Retour accepte hors delai standard car defaut confirme par photo
+T-509,2026-02-14,Client demande echange plutot que remboursement,Explication de la procedure retour puis recommande
+T-510,2026-02-18,Cafetiere fuite des la premiere utilisation,Retour accepte hors delai car defaut de fabrication
+T-511,2026-02-21,Question compatibilite accessoires aspirateur,Reponse technique fournie via fiche produit
+T-512,2026-02-25,Commande annulee mais debit constate,Remboursement integral sous 5 jours ouvres
+T-513,2026-03-01,Retard livraison purificateur d'air,Reclamation transporteur ouverte suivi communique au client
+T-514,2026-03-04,Client mecontent delai remboursement,Explication du delai standard de 5 a 7 jours ouvres apres controle entrepot
+T-515,2026-03-08,Trottinette Urban roue voilee a reception,Retour accepte immediatement defaut a la livraison
+T-516,2026-03-10,Demande de remboursement partiel,Refus pas de remboursement partiel dans la politique actuelle
+T-517,2026-03-12,Set de couteaux emballage endommage sans defaut produit,Pas de remboursement propose un geste commercial ponctuel
+T-518,2026-03-13,Question sur le paiement en 3 fois,Reponse fournie seuil de 100 euros rappele

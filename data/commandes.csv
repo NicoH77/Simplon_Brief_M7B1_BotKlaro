@@ -1,0 +1,46 @@
+commande_id,client_id,produit,montant_eur,date_commande,statut,date_livraison_prevue,date_livraison_reelle
+CMD-1001,CLI-0031,Aspirateur sans fil X200,189.90,2026-02-20,livree,2026-02-24,2026-02-24
+CMD-1002,CLI-0012,Lampe de bureau LED,34.50,2026-03-05,livree,2026-03-09,2026-03-08
+CMD-1003,CLI-0077,Cafetiere programmable,59.90,2026-01-10,livree,2026-01-14,2026-01-15
+CMD-1004,CLI-0004,Plaid polaire,24.90,2026-03-10,livree,2026-03-13,2026-03-13
+CMD-1005,CLI-0056,Enceinte bluetooth Sona,79.00,2026-02-01,livree,2026-02-05,2026-02-06
+CMD-1006,CLI-0019,Chaise de bureau ergonomique,249.00,2026-03-01,livree,2026-03-05,2026-03-06
+CMD-1007,CLI-0044,Set de couteaux Chef,45.00,2025-12-15,livree,2025-12-19,2025-12-19
+CMD-1008,CLI-0090,Robot patissier,329.00,2026-03-08,livree,2026-03-12,2026-03-12
+CMD-1009,CLI-0023,Trottinette electrique Urban,499.00,2026-02-25,livree,2026-03-01,2026-03-02
+CMD-1010,CLI-0067,Purificateur d'air,159.00,2026-01-20,livree,2026-01-24,2026-01-25
+CMD-1011,CLI-0008,Lampe de bureau LED,34.50,2026-03-12,expediee,2026-03-16,
+CMD-1012,CLI-0051,Aspirateur sans fil X200,189.90,2026-03-13,en_preparation,2026-03-18,
+CMD-1013,CLI-0033,Enceinte bluetooth Sona,79.00,2026-02-10,retard,2026-02-14,
+CMD-1014,CLI-0072,Chaise de bureau ergonomique,249.00,2026-02-15,retard,2026-02-19,
+CMD-1015,CLI-0006,Cafetiere programmable,59.90,2026-03-02,annulee,2026-03-06,
+CMD-1016,CLI-0084,Robot patissier,329.00,2026-02-18,annulee,2026-02-22,
+CMD-1017,CLI-0015,Set de couteaux Chef,45.00,2026-03-07,livree,2026-03-11,2026-03-10
+CMD-1018,CLI-0029,Plaid polaire,24.90,2026-02-05,livree,2026-02-09,2026-02-09
+CMD-1019,CLI-0061,Trottinette electrique Urban,499.00,2025-11-20,livree,2025-11-25,2025-11-26
+CMD-1020,CLI-0048,Purificateur d'air,159.00,2026-03-11,livree,2026-03-14,2026-03-14
+CMD-1021,CLI-0002,Lampe de bureau LED,34.50,2026-01-05,livree,2026-01-09,2026-01-09
+CMD-1022,CLI-0095,Aspirateur sans fil X200,189.90,2026-03-04,livree,2026-03-08,2026-03-07
+CMD-1023,CLI-0037,Enceinte bluetooth Sona,79.00,2026-03-09,livree,2026-03-13,2026-03-13
+CMD-1024,CLI-0011,Chaise de bureau ergonomique,249.00,2025-12-28,livree,2026-01-02,2026-01-03
+CMD-1025,CLI-0059,Cafetiere programmable,59.90,2026-03-06,livree,2026-03-10,2026-03-09
+CMD-1026,CLI-0022,Robot patissier,329.00,2026-01-15,livree,2026-01-19,2026-01-20
+CMD-1027,CLI-0080,Set de couteaux Chef,45.00,2026-02-22,livree,2026-02-26,2026-02-27
+CMD-1028,CLI-0041,Plaid polaire,24.90,2026-03-13,expediee,2026-03-17,
+CMD-1029,CLI-0009,Trottinette electrique Urban,499.00,2026-03-10,livree,2026-03-14,2026-03-14
+CMD-1030,CLI-0064,Purificateur d'air,159.00,2026-02-12,retard,2026-02-16,
+CMD-1031,CLI-0025,Lampe de bureau LED,34.50,2026-02-27,livree,2026-03-03,2026-03-03
+CMD-1032,CLI-0053,Aspirateur sans fil X200,189.90,2025-12-05,livree,2025-12-10,2025-12-11
+CMD-1033,CLI-0016,Enceinte bluetooth Sona,79.00,2026-03-02,livree,2026-03-06,2026-03-05
+CMD-1034,CLI-0088,Chaise de bureau ergonomique,249.00,2026-01-28,livree,2026-02-01,2026-02-02
+CMD-1035,CLI-0003,Cafetiere programmable,59.90,2026-03-11,livree,2026-03-15,2026-03-14
+CMD-1036,CLI-0071,Robot patissier,329.00,2026-02-08,livree,2026-02-12,2026-02-13
+CMD-1037,CLI-0018,Set de couteaux Chef,45.00,2026-03-13,en_preparation,2026-03-19,
+CMD-1038,CLI-0046,Plaid polaire,24.90,2026-01-22,livree,2026-01-26,2026-01-27
+CMD-1039,CLI-0093,Trottinette electrique Urban,499.00,2026-02-14,livree,2026-02-18,2026-02-19
+CMD-1040,CLI-0007,Purificateur d'air,159.00,2026-03-05,livree,2026-03-09,2026-03-08
+CMD-1041,CLI-0038,Lampe de bureau LED,34.50,2026-03-14,en_preparation,2026-03-19,
+CMD-1042,CLI-0062,Aspirateur sans fil X200,189.90,2026-02-06,livree,2026-02-10,2026-02-11
+CMD-1043,CLI-0014,Enceinte bluetooth Sona,79.00,2025-12-18,livree,2025-12-22,2025-12-23
+CMD-1044,CLI-0079,Chaise de bureau ergonomique,249.00,2026-03-12,retard,2026-03-16,
+CMD-1045,CLI-0027,Robot patissier,329.00,2026-03-01,livree,2026-03-05,2026-03-04
