@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from .commun import construire_modele_llm, executer_conversation, tracer
 from .tools import ContexteOutils, outils_langchain
+from langchain.agents import create_agent
 
 PROMPT_SYSTEME = """Tu es l'agent remboursement du support Klaro. Tu verifies
 si une commande est eligible a un remboursement, a partir de l'outil dedie,
@@ -45,7 +46,20 @@ def construire_agent(ctx: ContexteOutils):
     cet agent ne peut jamais executer de remboursement, quel que soit le
     prompt.
     """
-    raise NotImplementedError("A completer : construire_agent (agent 2)")
+    # raise NotImplementedError("A completer : construire_agent (agent 2)")
+
+    outils = outils_langchain(ctx)
+
+    mes_outils = [
+        outils["verifier_eligibilite_remboursement"],
+        outils["rechercher_historique"],
+    ]
+
+    return create_agent(
+        model=construire_modele_llm(),
+        tools=mes_outils,
+        system_prompt=PROMPT_SYSTEME,
+    )    
 
 
 def repondre(ctx: ContexteOutils, question: str, tracer_trace: bool = True) -> dict:
