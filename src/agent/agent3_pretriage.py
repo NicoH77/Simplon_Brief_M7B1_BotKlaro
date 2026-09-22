@@ -42,7 +42,34 @@ def classifier_message(texte: str) -> dict:
     fonction `_parser_reponse_json` fournie plus bas, qui gere le parsing et
     les cas de reponse mal formee.
     """
-    raise NotImplementedError("A completer : classifier_message (agent 3)")
+    # raise NotImplementedError("A completer : classifier_message (agent 3)")
+
+    modele = construire_modele_llm()
+
+    prompt = f"""
+        Tu es un agent de pré-triage du support client Klaro.
+        Tu dois classer le message dans UNE SEULE catégorie parmi :
+        - livraison
+        - retour_remboursement
+        - compte
+        - produit
+        - paiement
+        - autre
+        Réponds UNIQUEMENT avec un JSON valide.
+        
+        Exemple :
+        {{
+            "categorie": "livraison",
+            "confiance": 0.87,
+            "justification": "Le client demande des informations sur la livraison."
+        }}
+        Message client :
+        {texte}
+        """
+
+    reponse = modele.invoke(prompt).content
+
+    return _parser_reponse_json(reponse)
 
 
 def _parser_reponse_json(brut: str) -> dict:
