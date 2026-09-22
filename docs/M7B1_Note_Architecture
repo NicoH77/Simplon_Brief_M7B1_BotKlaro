@@ -69,19 +69,13 @@ Chaque agent possède une mission unique, des outils explicitement autorisés et
 Un agent ne consulte que les données nécessaires à sa mission :
 
 - l’agent 1 consulte la FAQ ;
-- l’agent 2 consulte les commandes et la politique de remboursement ;
-- l’agent 3 consulte les messages entrants, la taxonomie et, si nécessaire, l’historique des tickets résolus ;
+- l’agent 2 consulte les commandes, la politique de remboursement et l'historique ;
+- l’agent 3 consulte les messages entrants ;
 - l’agent 4 consulte les données nécessaires à l’instruction d’un remboursement et possède seul un accès conditionnel à l’outil d’écriture.
 
-### 4.3 Réponses fondées sur les outils
+### 4.3 Validation humaine obligatoire
 
-Le modèle de langage ne doit pas présenter comme un fait une information issue de ses seules connaissances internes. Une réponse métier doit s’appuyer sur le résultat d’un ou plusieurs appels d’outils autorisés.
-
-Si aucune source ne permet de répondre, l’agent doit indiquer qu’il ne dispose pas des informations nécessaires et orienter le dossier vers un conseiller humain.
-
-### 4.4 Validation humaine obligatoire
-
-L’agent 4 peut préparer une demande de remboursement, mais il ne peut pas l’exécuter de manière autonome. Un middleware *Human in the Loop* interrompt réellement le traitement avant l’appel à `initier_remboursement`.
+L’agent 4 peut préparer une demande de remboursement, mais il ne peut pas l’exécuter de manière autonome. Un middleware *Human in the Loop* interrompt réellement le traitement avant d'initier le remboursement.
 
 L’exécution ne reprend qu’après une approbation humaine explicite. Un refus ou une absence de réponse ne doit provoquer aucune écriture.
 
@@ -108,82 +102,54 @@ La politique de remboursement et la taxonomie de tri doivent être centralisées
 
 ## 5. Vue d’ensemble de l’architecture
 
-```
-
-                    +-------------------+
-                    | Message client    |
-                    +---------+---------+
-                              |
-                              v
-                 +------------+------------+
-                 | Agent 3 - Pré-triage    |
-                 +------------+------------+
-                              |
-       +----------------------+--------------------+
-       |                                           |
-       v                                           v
-
-+-------------+                          +----------------+
-| Agent 1     |                          | Agent 2        |
-| Information |                          | Eligibilité    |
-| FAQ         |                          | remboursement  |
-+------+------+                          +--------+-------+
-       |                                          |
-       +----------------------+-------------------+
-                              |
-                              v
-
-                  +-----------+------------+
-                  | Agent 4                |
-                  | Autonomie contrôlée    |
-                  | + validation humaine   |
-                  +-----------+------------+
-                              |
-                              v
-                    Validation conseiller
-                              |
-                              v
-```
 
 ```mermaid
 flowchart TD
-    A[Message ou demande client]
-    B[Agent 1
+    D1[Message ou demande client]
+    A1[Agent 1
 Renseignement général]
-    C[Agent 2
+    A2[Agent 2
 Éligibilité en lecture seule]
-    D[Agent 3
+    A3[Agent 3
 Pré-triage des messages]
-    E[Agent 4
-Autonomie sous contrainte]
-    F{Orientation}
-    G[(FAQ)]
-    H[(Politique de remboursement)]     
-    I[Proposition d’action]
-    J{Validation humaine 
+    A4[Agent 4
+Autonomie controlée]
+    O{Orientation
+    intervention humaine}
+    D2[(FAQ)]
+    D3[(Politique de remboursement)]     
+    P[Proposition d’action]
+    V{Validation humaine 
     explicite}
+    D4[(Historique
+    tickets)]
+    D5[(commandes)]
 
-    A --> D
-    D --> F
-    G --> B
-    F --> B
-    F --> C
-    H --> C
-    B --> E
-    C --> E
-    E --> I
-    I --> J
+    D1 --> A3
+    D5 -.-> A3
+    A3 --> O
+    D2 -.-> A1
+    O --> A1
+    O --> A2
+    D3 -.-> A2
+    D4 -.-> A2
+    A2 --> A4
+    A4 --> P
+    P --> V
+    
 
 ```
 
 
 ### Lecture du schéma
 
-- L’orientation sélectionne l’agent adapté à la demande.
+- L'agent 3 classifie les demandes pour permettre l'orientation
+- L’orientation sélectionne l’agent adapté à la demande (sous controle d'un conseiller).
+- l'agent 1 traite des questions générales à l'aide de la FAQ 
+- l'agent 2 traite des demandes de remboursement à l'aide de la politique de remboursement et de l'historique des demandes
 - Les agents 1 à 3 n’ont aucun outil d’écriture.
-- L’agent 4 est le seul agent pouvant demander l’utilisation de `initier_remboursement`.
-- Le middleware de validation humaine constitue une barrière d’exécution, et non une simple question ajoutée au prompt.
-- Toutes les étapes significatives alimentent un journal de traces commun.
+- L’agent 4 est le seul agent pouvant initier un remboursement, mais sous controle humain. Cette barière d'éxéctution est constituée par le middleware de validation humaine, et non une simple question ajoutée au prompt.
+
 
 ---
 
