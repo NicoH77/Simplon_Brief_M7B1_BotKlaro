@@ -39,7 +39,20 @@ def construire_agent(ctx: ContexteOutils):
     cet agent ne peut structurellement pas déclencher ou promettre un
     remboursement, même si le prompt était mal rédigé ou contourné.
     """
-    raise NotImplementedError("A completer : construire_agent (agent 1)")
+    ## raise NotImplementedError("A completer : construire_agent (agent 1)")
+
+    from langchain.agents import create_agent
+
+    outils = outils_langchain(ctx)
+
+    return create_agent(
+        model=construire_modele_llm(),
+        tools=[
+            outils["chercher_faq"],
+            outils["consulter_commande"],
+        ],
+        system_prompt=PROMPT_SYSTEME,
+    )
 
 
 def repondre(ctx: ContexteOutils, question: str, tracer_trace: bool = True) -> dict:
