@@ -4,3 +4,22 @@ __pycache__/
 outputs/traces_agent/*
 outputs/*.csv
 .env
+
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS / éditeurs
+.DS_Store
+.vscode/
+.idea/
+
+
