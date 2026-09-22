@@ -66,7 +66,7 @@ LIMITE_MESSAGES_PRETRIAGE: int | None = 8
 # --------------------------------------------------------------------------
 # Agents
 # --------------------------------------------------------------------------
-MODELE_MISTRAL = "mistralai:mistral-large-latest"
+MODELE_MISTRAL = "mistralai:ministral-14b-2512"
 MISTRAL_REQUETES_PAR_SECONDE = 0.3   # debit maximal vers l'API (palier gratuit : baissez encore si 429)
 MISTRAL_TENTATIVES_MAX = 5           # nouvelles tentatives sur une erreur 429, avant d'abandonner
 MISTRAL_ATTENTE_INITIALE_RETRY = 5.0 # secondes avant la 1ere reprise (double a chaque nouvel echec)
