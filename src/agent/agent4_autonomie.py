@@ -24,6 +24,10 @@ from .. import config as C
 from .commun import construire_modele_llm, executer_avec_reprises, extraire_trace, tracer
 from .tools import ContexteOutils, outils_langchain
 
+from langchain.agents import create_agent
+from langchain.agents.middleware import HumanInTheLoopMiddleware
+from langgraph.checkpoint.memory import InMemorySaver
+
 PROMPT_SYSTEME = f"""Tu es l'agent d'autonomie du support Klaro. Pour une
 commande donnee :
 
@@ -64,7 +68,35 @@ def construire_agent(ctx: ContexteOutils):
     C'est cette fonction, et elle seule, qui rend le remboursement automatise
     impossible sans validation humaine explicite.
     """
-    raise NotImplementedError("A completer : construire_agent (agent 4)")
+    # raise NotImplementedError("A completer : construire_agent (agent 4)")
+
+    outils = outils_langchain(ctx)
+
+    mes_outils = [
+        outils["verifier_eligibilite_remboursement"],
+        outils["initier_remboursement"],
+    ]
+
+    middleware = [
+        HumanInTheLoopMiddleware(
+            interrupt_on={
+                "initier_remboursement": {
+                    "allowed_decisions": [
+                        "approve",
+                        "reject",
+                    ]
+                }
+            }
+        )
+    ]
+
+    return create_agent(
+        model=construire_modele_llm(),
+        tools=mes_outils,
+        system_prompt=PROMPT_SYSTEME,
+        middleware=middleware,
+        checkpointer=InMemorySaver(),
+    )
 
 
 def executer_agent4(ctx: ContexteOutils, commande_id: str, decision: dict,
