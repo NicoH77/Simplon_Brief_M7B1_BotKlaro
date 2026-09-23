@@ -1,0 +1,735 @@
+# Note d’architecture cible
+
+## Projet M7B1 Klaro : agents IA et architecture multi-agents
+
+**Livrable :** note d’architecture commune, incluant la répartition des agents  
+**Statut :** proposition d’architecture cible  
+**Périmètre :** étape 1 du projet M7B1
+
+---
+
+## 1. Objet du document
+
+Cette note décrit l’architecture cible du nouveau système de support client de Klaro. Elle remplace l’approche monolithique de l’ancien bot par une architecture composée de quatre agents IA spécialisés :
+
+1. un agent de renseignement général ;
+2. un agent de vérification de l’éligibilité au remboursement, en lecture seule ;
+3. un agent de pré-triage des messages entrants ;
+4. un agent d’autonomie sous contrainte, soumis à une validation humaine obligatoire.
+
+Le document précise également les responsabilités, les sources de données, les outils, les restrictions, les interactions et la répartition du travail au sein du binôme.
+
+> La note de risques détaillée, notamment sur le RGPD, le biais d’automatisation et le risque de surveillance des conseillers, fait l’objet d’un livrable séparé.
+
+---
+
+## 2. Contexte et constats sur l’existant
+
+Klaro traite plusieurs centaines de commandes par jour. Le bot existant, situé dans `src/agent/ancien_bot.py`, répond à partir de mots-clés sans consulter les données métier nécessaires.
+
+Les principaux défauts identifiés sont les suivants :
+
+- absence d’accès au fichier des commandes ;
+- absence de consultation de la politique de remboursement ;
+- réponses non fondées sur des sources métier vérifiables ;
+- possibilité de promettre un remboursement sans contrôle d’éligibilité ;
+- absence de validation humaine avant une décision à effet financier ;
+- absence de journalisation des appels d’outils et des décisions ;
+- architecture monolithique, difficile à contrôler et à faire évoluer ;
+- risque de non-conformité lorsqu’une décision automatisée produit un effet financier.
+
+L’objectif de la nouvelle architecture est de réduire ces risques par la spécialisation des agents, la limitation de leurs droits et la mise en place d’une traçabilité commune.
+
+---
+
+## 3. Contraintes structurantes
+
+L’architecture doit respecter les contraintes suivantes :
+
+1. **Quatre agents distincts** doivent être implémentés, chacun avec un périmètre limité.
+2. **Toutes les informations communiquées** doivent provenir d’un appel d’outil vers une source autorisée.
+3. **L’agent 2 reste strictement en lecture seule** et ne peut jamais déclencher un remboursement.
+4. **Le seul outil d’écriture**, `initier_remboursement`, est réservé à l’agent 4.
+5. **Toute utilisation de l’outil d’écriture est suspendue** jusqu’à l’approbation explicite d’un humain.
+6. **Les appels d’outils et les résultats doivent être tracés** afin de permettre l’audit et l’évaluation croisée.
+7. **Les secrets techniques**, notamment la clé API Mistral, doivent être chargés depuis l’environnement et ne jamais être écrits dans le code.
+8. **Les quatre agents utilisent le même modèle de langage**, accessible par `langchain-mistralai`.
+9. **Les agents partagent les mêmes référentiels métier** lorsque leur mission exige de consulter une politique ou une taxonomie commune.
+
+---
+
+## 4. Principes d’architecture
+
+### 4.1 Séparation des responsabilités
+
+Chaque agent possède une mission unique, des outils explicitement autorisés et des permissions minimales. Cette séparation évite qu’un agent chargé d’informer ou de classifier puisse produire directement un effet financier.
+
+### 4.2 Accès minimal aux données
+
+Un agent ne consulte que les données nécessaires à sa mission :
+
+- l’agent 1 consulte la FAQ ;
+- l’agent 2 consulte les commandes, la politique de remboursement et l'historique ;
+- l’agent 3 consulte les messages entrants ;
+- l’agent 4 consulte les données nécessaires à l’instruction d’un remboursement et possède seul un accès conditionnel à l’outil d’écriture.
+
+### 4.3 Validation humaine obligatoire
+
+L’agent 4 peut préparer une demande de remboursement, mais il ne peut pas l’exécuter de manière autonome. Un middleware *Human in the Loop* interrompt réellement le traitement avant d'initier le remboursement.
+
+L’exécution ne reprend qu’après une approbation humaine explicite. Un refus ou une absence de réponse ne doit provoquer aucune écriture.
+
+### 4.5 Traçabilité
+
+Chaque agent produit des traces structurées permettant de vérifier :
+
+- l’agent appelé ;
+- la requête traitée ;
+- les outils utilisés ;
+- les sources consultées ;
+- les résultats utiles ;
+- la réponse ou recommandation produite ;
+- la présence et le résultat d’une validation humaine ;
+- les erreurs rencontrées.
+
+Les traces ne doivent pas exposer la clé API ni enregistrer inutilement des données personnelles.
+
+### 4.6 Cohérence des référentiels
+
+La politique de remboursement et la taxonomie de tri doivent être centralisées. Les agents concernés ne doivent pas contenir chacun une copie différente des règles dans leur prompt système.
+
+---
+
+## 5. Vue d’ensemble de l’architecture
+
+
+```mermaid
+flowchart TD
+    D1[Message ou demande client]
+    A1[Agent 1
+Renseignement général]
+    A2[Agent 2
+Éligibilité en lecture seule]
+    A3[Agent 3
+Pré-triage des messages]
+    A4[Agent 4
+Autonomie controlée]
+    O{Orientation
+    intervention humaine}
+    D2[(FAQ)]
+    D3[(Politique de remboursement)]     
+    P[Proposition d’action]
+    V{Validation humaine 
+    explicite}
+    D4[(Historique
+    tickets)]
+    D5[(commandes)]
+
+    D1 --> A3
+    D5 -.-> A3
+    A3 --> O
+    D2 -.-> A1
+    O --> A1
+    O --> A2
+    D3 -.-> A2
+    D4 -.-> A2
+    A2 --> A4
+    A4 --> P
+    P --> V
+    
+
+```
+
+
+### Lecture du schéma
+
+- L'agent 3 classifie les demandes pour permettre l'orientation
+- L’orientation sélectionne l’agent adapté à la demande (sous controle d'un conseiller).
+- l'agent 1 traite des questions générales à l'aide de la FAQ 
+- l'agent 2 traite des demandes de remboursement à l'aide de la politique de remboursement et de l'historique des demandes
+- Les agents 1 à 3 n’ont aucun outil d’écriture.
+- L’agent 4 est le seul agent pouvant initier un remboursement, mais sous controle humain. Cette barière d'éxéctution est constituée par le middleware de validation humaine, et non une simple question ajoutée au prompt.
+
+
+---
+
+## 6. Matrice de responsabilités et de permissions
+
+| Agent | Responsabilité principale | Sources autorisées | Écriture métier | Validation humaine |
+|---|---|---|---:|---:|
+| Agent 1 | Répondre aux questions générales | `data/faq.json` | Non | Non requise |
+| Agent 2 | Vérifier l’éligibilité d’une commande | `data/commandes.csv`, `data/politique_remboursement.md` | Non | Requise pour toute action ultérieure |
+| Agent 3 | Proposer un pré-triage des messages | `data/messages_entrants.csv`, `data/tickets_historique.csv`, taxonomie partagée | Non | Validation du tri par un conseiller |
+| Agent 4 | Préparer une action de remboursement sous contrainte | commandes, politique de remboursement, décision humaine | Oui, uniquement avec `initier_remboursement` | Obligatoire avant l’écriture |
+
+---
+
+## 7. Description détaillée des agents
+
+### 7.1 Agent 1 : renseignement général
+
+#### Mission
+
+Répondre aux questions générales des clients à partir de la FAQ officielle.
+
+#### Entrées
+
+- question du client ;
+- contexte conversationnel strictement nécessaire.
+
+#### Source autorisée
+
+- `data/faq.json`.
+
+#### Outil envisagé
+
+- `rechercher_faq(question)` : recherche les entrées pertinentes dans la FAQ et retourne les passages trouvés avec leur référence.
+
+#### Comportement attendu
+
+1. recevoir la question ;
+2. appeler l’outil de recherche dans la FAQ ;
+3. formuler une réponse uniquement à partir du résultat reçu ;
+4. citer ou tracer la source utilisée ;
+5. transférer vers un conseiller si la FAQ ne permet pas de répondre.
+
+#### Restrictions
+
+L’agent 1 ne doit pas :
+
+- consulter une commande ;
+- évaluer une demande de remboursement ;
+- promettre une action commerciale ;
+- modifier une donnée ;
+- inventer une réponse en l’absence de résultat.
+
+#### Sortie attendue
+
+Une réponse informative accompagnée de la référence de la FAQ utilisée, ou un message indiquant que l’information n’a pas été trouvée.
+
+---
+
+### 7.2 Agent 2 : remboursement en lecture seule
+
+#### Mission
+
+Vérifier si une commande paraît éligible à un remboursement au regard des données de la commande et de la politique officielle.
+
+#### Entrées
+
+- identifiant de commande ;
+- motif de la demande ;
+- informations fournies par le client.
+
+#### Sources autorisées
+
+- `data/commandes.csv` ;
+- `data/politique_remboursement.md`.
+
+#### Outils envisagés
+
+- `rechercher_commande(numero_commande)` ;
+- `lire_politique_remboursement()` ;
+- `verifier_eligibilite(donnees_commande, politique, motif)`.
+
+#### Comportement attendu
+
+1. rechercher la commande ;
+2. lire la politique en vigueur ;
+3. confronter les données factuelles aux critères de la politique ;
+4. produire une conclusion argumentée ;
+5. rappeler qu’aucun remboursement n’a été exécuté ;
+6. transmettre le dossier à un humain ou à l’agent 4 selon le scénario d’intégration retenu.
+
+#### Restrictions
+
+L’agent 2 ne doit pas :
+
+- appeler `initier_remboursement` ;
+- modifier la commande ;
+- garantir qu’un remboursement sera réalisé ;
+- conclure sans avoir consulté la commande et la politique ;
+- masquer un critère manquant ou une incertitude.
+
+#### Sortie attendue
+
+Une analyse structurée comprenant :
+
+- les informations de commande utilisées ;
+- les critères de politique vérifiés ;
+- les critères satisfaits ou non satisfaits ;
+- les informations manquantes ;
+- une conclusion telle que `éligible`, `non éligible` ou `vérification humaine nécessaire` ;
+- la mention explicite `aucun remboursement exécuté`.
+
+---
+
+### 7.3 Agent 3 : pré-triage des messages entrants
+
+#### Mission
+
+Proposer une catégorie et une priorité de traitement pour chaque message entrant afin d’aider les conseillers, sans remplacer leur jugement.
+
+#### Entrées
+
+- contenu du message client ;
+- identifiant technique du message.
+
+#### Sources autorisées
+
+- `data/messages_entrants.csv` ;
+- `data/tickets_historique.csv` ;
+- taxonomie de tri partagée et versionnée.
+
+#### Outils envisagés
+
+- `lire_message(message_id)` ;
+- `rechercher_cas_similaires(message)` ;
+- `charger_taxonomie()`.
+
+#### Taxonomie initiale proposée
+
+- renseignement général ;
+- livraison ;
+- retour produit ;
+- demande de remboursement ;
+- réclamation ;
+- autre ou à revoir.
+
+Cette taxonomie devra être alignée avec les données disponibles et validée collectivement avant l’intégration finale.
+
+#### Comportement attendu
+
+1. lire le message ;
+2. charger la taxonomie autorisée ;
+3. consulter, si utile, des cas historiques similaires ;
+4. proposer une catégorie, une justification courte et un niveau de confiance ;
+5. demander une validation explicite au conseiller ;
+6. conserver la correction éventuelle afin d’évaluer la qualité du système, sans transformer ce suivi en mesure individuelle de performance.
+
+#### Restrictions
+
+L’agent 3 ne doit pas :
+
+- prendre une décision financière ;
+- envoyer automatiquement une réponse définitive au client ;
+- évaluer la performance d’un conseiller ;
+- produire un classement individuel des conseillers ;
+- présenter une catégorie incertaine comme certaine.
+
+#### Sortie attendue
+
+```json
+{
+  "message_id": "MSG-001",
+  "categorie_proposee": "demande de remboursement",
+  "justification": "Le message contient une demande explicite de restitution du montant payé.",
+  "confiance": "elevee",
+  "validation_conseiller_requise": true
+}
+```
+
+Le niveau de confiance est présenté comme une indication d’aide au contrôle. Il ne dispense jamais le conseiller de relire le message.
+
+---
+
+### 7.4 Agent 4 : autonomie sous contrainte
+
+#### Mission
+
+Explorer une automatisation limitée de l’initiation d’un remboursement, avec des règles strictes, une traçabilité complète et une validation humaine obligatoire.
+
+#### Entrées
+
+- identifiant de commande ;
+- demande du client ;
+- données de la commande ;
+- politique de remboursement ;
+- décision humaine explicite.
+
+#### Sources et outils autorisés
+
+- lecture de la commande ;
+- lecture de la politique de remboursement ;
+- vérification des critères d’éligibilité ;
+- `initier_remboursement`, seul outil d’écriture du système.
+
+#### Comportement attendu
+
+1. récupérer la commande ;
+2. récupérer la politique de remboursement ;
+3. vérifier l’ensemble des critères requis ;
+4. produire une synthèse factuelle et une action proposée ;
+5. créer une demande d’approbation contenant les éléments utiles au contrôle ;
+6. interrompre réellement l’exécution ;
+7. attendre une décision humaine explicite ;
+8. en cas de refus, annuler l’action et tracer le motif disponible ;
+9. en cas d’approbation, appeler `initier_remboursement` une seule fois ;
+10. tracer le résultat technique de l’appel.
+
+#### Barrière *Human in the Loop*
+
+La validation humaine doit être appliquée dans le flux d’exécution ou dans un middleware dédié. Une instruction telle que « demande confirmation avant d’agir » placée uniquement dans le prompt n’est pas considérée comme un contrôle suffisant.
+
+Le middleware doit garantir les propriétés suivantes :
+
+- blocage avant l’appel d’écriture ;
+- approbation explicite et identifiable ;
+- refus possible sans action métier ;
+- conservation d’une trace de la décision ;
+- absence de reprise automatique après expiration ou erreur ;
+- protection contre un double appel de remboursement.
+
+#### Restrictions
+
+L’agent 4 ne doit pas :
+
+- rembourser sans validation humaine ;
+- considérer le silence comme une approbation ;
+- contourner le middleware ;
+- déduire une éligibilité à partir d’informations absentes ;
+- exécuter plusieurs fois la même action ;
+- exposer des secrets ou des données inutiles dans les traces.
+
+#### Sortie attendue avant validation
+
+```json
+{
+  "commande_id": "CMD-001",
+  "action_proposee": "initier_remboursement",
+  "criteres_verifies": [],
+  "informations_manquantes": [],
+  "statut": "en_attente_validation_humaine"
+}
+```
+
+#### Sortie attendue après décision humaine
+
+- `refuse` : aucune écriture, décision tracée ;
+- `approuve` : appel unique à `initier_remboursement`, résultat tracé ;
+- `indisponible` ou `expire` : aucune écriture, traitement interrompu.
+
+---
+
+## 8. Composants partagés
+
+### 8.1 Couche d’outils
+
+Les accès aux fichiers et les actions métier sont encapsulés dans des fonctions ou outils dédiés. Le modèle ne lit pas directement les fichiers et n’effectue pas directement d’écriture.
+
+Cette couche doit :
+
+- valider les paramètres d’entrée ;
+- gérer les erreurs de lecture ;
+- retourner des résultats structurés ;
+- distinguer clairement lecture et écriture ;
+- empêcher l’accès à un outil non autorisé pour un agent.
+
+### 8.2 Prompts système
+
+Chaque agent possède un prompt système spécifique indiquant :
+
+- sa mission ;
+- les outils autorisés ;
+- ses interdictions ;
+- le format de sortie attendu ;
+- la conduite à tenir lorsqu’une information manque ;
+- l’obligation de ne répondre qu’à partir des résultats d’outils.
+
+Les règles métier détaillées ne doivent pas être dupliquées dans les prompts si elles existent déjà dans les fichiers de référence.
+
+### 8.3 Journalisation
+
+Un schéma commun de traces est utilisé par les quatre agents.
+
+```json
+{
+  "timestamp": "2026-01-01T10:00:00Z",
+  "trace_id": "uuid",
+  "agent": "agent_2_eligibilite",
+  "request_id": "uuid",
+  "tools_called": [
+    {
+      "name": "rechercher_commande",
+      "status": "success"
+    },
+    {
+      "name": "lire_politique_remboursement",
+      "status": "success"
+    }
+  ],
+  "outcome": "verification_humaine_necessaire",
+  "human_approval": null,
+  "error": null
+}
+```
+
+Les valeurs ci-dessus illustrent uniquement le format attendu.
+
+### 8.4 Gestion de la configuration
+
+La configuration du modèle et la clé API Mistral sont chargées depuis les variables d’environnement, selon le fichier `.env.example`. Aucun secret ne doit être commité dans le dépôt.
+
+### 8.5 Gestion des erreurs
+
+En cas d’erreur :
+
+- l’agent ne doit pas fabriquer de résultat de remplacement ;
+- l’erreur doit être tracée ;
+- une action d’écriture ne doit pas être tentée ou répétée automatiquement ;
+- le dossier doit être orienté vers un traitement humain lorsque cela est nécessaire.
+
+---
+
+## 9. Flux fonctionnels principaux
+
+### 9.1 Question générale
+
+1. Le message est orienté vers l’agent 1.
+2. L’agent interroge la FAQ.
+3. Il construit une réponse à partir du résultat de l’outil.
+4. La réponse et sa source sont tracées.
+5. En l’absence de résultat, la demande est transmise à un conseiller.
+
+### 9.2 Vérification d’un remboursement
+
+1. La demande est orientée vers l’agent 2.
+2. L’agent charge la commande.
+3. L’agent consulte la politique de remboursement.
+4. Il compare les faits aux critères.
+5. Il fournit une conclusion justifiée et indique qu’aucune action n’a été exécutée.
+
+### 9.3 Pré-triage d’un message
+
+1. L’agent 3 lit le message entrant.
+2. Il charge la taxonomie commune.
+3. Il peut rechercher des cas historiques comparables.
+4. Il propose une catégorie et une justification.
+5. Le conseiller accepte ou corrige la proposition.
+
+### 9.4 Initiation contrôlée d’un remboursement
+
+1. L’agent 4 collecte les données nécessaires.
+2. Il vérifie les critères d’éligibilité.
+3. Il prépare une proposition d’action.
+4. Le middleware suspend l’exécution.
+5. Un humain examine la commande, les critères et la proposition.
+6. Sans approbation explicite, aucune écriture n’est réalisée.
+7. Après approbation, l’outil `initier_remboursement` est appelé une seule fois.
+8. Le résultat est journalisé.
+
+---
+
+## 10. Répartition du travail dans le binôme
+
+La répartition proposée vise à équilibrer les difficultés fonctionnelles et techniques tout en permettant une évaluation croisée pertinente.
+
+### Développeur A
+
+#### Agent 1 : renseignement général
+
+Compétences mobilisées :
+
+- création d’un outil de recherche dans une FAQ ;
+- rédaction d’un prompt contraint ;
+- production de réponses sourcées ;
+- gestion de l’absence de résultat.
+
+#### Agent 3 : pré-triage des messages
+
+Compétences mobilisées :
+
+- classification de texte ;
+- définition et utilisation d’une taxonomie ;
+- exploitation de tickets historiques ;
+- gestion de l’incertitude et de la validation par un conseiller.
+
+### Développeur B
+
+#### Agent 2 : remboursement en lecture seule
+
+Compétences mobilisées :
+
+- lecture et validation de données métier ;
+- application de règles issues d’un document ;
+- justification d’une conclusion ;
+- contrôle strict des permissions.
+
+#### Agent 4 : autonomie sous contrainte
+
+Compétences mobilisées :
+
+- orchestration d’outils ;
+- séparation entre recommandation et action ;
+- middleware *Human in the Loop* ;
+- idempotence, traçabilité et contrôle de l’écriture.
+
+### Travail commun obligatoire
+
+Même si le développement est réparti, les deux membres du binôme doivent comprendre l’ensemble du système. Ils réalisent ensemble :
+
+- l’analyse de l’ancien bot ;
+- la définition des contrats d’outils ;
+- la taxonomie partagée ;
+- le format commun des traces ;
+- la revue des prompts système ;
+- les tests d’intégration ;
+- la note de risques ;
+- la décision finale de déploiement.
+
+Chaque développeur évalue ensuite les deux agents réalisés par son binôme, conformément au principe d’évaluation croisée.
+
+---
+
+## 11. Contrats d’interface proposés
+
+Pour faciliter l’intégration, les outils retournent des objets structurés plutôt que du texte libre.
+
+### Résultat de recherche d’une commande
+
+```json
+{
+  "found": true,
+  "commande_id": "CMD-001",
+  "data": {},
+  "source": "data/commandes.csv",
+  "error": null
+}
+```
+
+### Résultat de consultation d’une politique
+
+```json
+{
+  "found": true,
+  "rules": [],
+  "source": "data/politique_remboursement.md",
+  "error": null
+}
+```
+
+### Résultat d’un agent
+
+```json
+{
+  "agent": "agent_2_eligibilite",
+  "status": "success",
+  "answer": "Analyse fondée sur les données consultées.",
+  "sources": [],
+  "requires_human_review": true,
+  "proposed_action": null,
+  "error": null
+}
+```
+
+Ces contrats sont des propositions d’architecture. Ils pourront être adaptés au squelette de code fourni, tout en conservant les mêmes garanties de séparation, de traçabilité et de contrôle.
+
+---
+
+## 12. Stratégie de tests
+
+### 12.1 Tests unitaires
+
+- recherche d’une entrée existante et inexistante dans la FAQ ;
+- recherche d’une commande valide, inconnue ou mal formée ;
+- lecture de la politique ;
+- classification de messages représentatifs ;
+- refus d’accès à un outil non autorisé ;
+- validation des formats de sortie.
+
+### 12.2 Tests de sécurité fonctionnelle
+
+- tentative de remboursement par l’agent 1 ;
+- tentative de remboursement par l’agent 2 ;
+- tentative d’injection demandant à l’agent 3 de modifier une commande ;
+- tentative de contournement de la validation humaine ;
+- absence de validation ;
+- refus explicite du conseiller ;
+- double soumission d’une même demande ;
+- indisponibilité de la politique ou du fichier des commandes.
+
+### 12.3 Tests de traçabilité
+
+Pour chaque scénario, vérifier que les traces permettent d’identifier :
+
+- les outils appelés ;
+- les sources utilisées ;
+- la conclusion ou l’action proposée ;
+- la décision humaine lorsqu’elle est requise ;
+- l’absence d’écriture lorsqu’aucune approbation n’est fournie.
+
+### 12.4 Tests d’intégration
+
+Le script `python scripts/run_all.py` sert de harnais de progression partagé. Le notebook `notebooks/M7B_pilotage.ipynb` permet d’exécuter les mêmes étapes de manière progressive.
+
+L’intégration finale doit notamment vérifier :
+
+- l’utilisation d’une politique commune ;
+- l’utilisation d’une taxonomie commune ;
+- l’absence de réponses contradictoires ;
+- l’impossibilité d’accéder à `initier_remboursement` depuis les agents 1, 2 et 3 ;
+- le blocage réel de l’agent 4 avant validation humaine.
+
+---
+
+## 13. Critères d’acceptation
+
+L’architecture sera considérée comme correctement implémentée si :
+
+- [ ] les quatre agents sont séparés et identifiables ;
+- [ ] chaque agent possède un prompt système et une liste d’outils autorisés ;
+- [ ] aucune information métier n’est fournie sans appel d’outil ;
+- [ ] l’agent 1 répond uniquement à partir de la FAQ ;
+- [ ] l’agent 2 reste en lecture seule ;
+- [ ] l’agent 3 propose un tri soumis à la validation d’un conseiller ;
+- [ ] l’agent 3 ne produit aucune mesure individuelle de performance ;
+- [ ] seul l’agent 4 peut accéder à `initier_remboursement` ;
+- [ ] l’agent 4 est bloqué avant toute écriture tant qu’un humain n’a pas approuvé ;
+- [ ] le silence, l’expiration ou une erreur ne valent jamais approbation ;
+- [ ] chaque appel d’outil est traçable ;
+- [ ] les secrets sont absents du code et des traces ;
+- [ ] les agents utilisent les mêmes référentiels métier ;
+- [ ] les tests d’intégration ne révèlent pas de réponse contradictoire ;
+- [ ] chaque membre du binôme comprend et peut expliquer les quatre agents.
+
+---
+
+## 14. Décisions d’architecture
+
+| Décision | Justification |
+|---|---|
+| Architecture à quatre agents spécialisés | Limiter le périmètre, les permissions et les effets possibles de chaque agent |
+| Outils distincts des agents | Centraliser et contrôler l’accès aux données et aux actions métier |
+| Agent 2 en lecture seule | Séparer l’analyse d’éligibilité de l’exécution financière |
+| Outil d’écriture réservé à l’agent 4 | Réduire la surface de risque et rendre l’autorisation vérifiable dans le code |
+| Validation humaine implémentée dans le flux | Empêcher qu’une instruction de prompt puisse être contournée |
+| Traces structurées communes | Faciliter l’audit, le débogage et l’évaluation croisée |
+| Politique et taxonomie centralisées | Éviter les divergences entre agents |
+| Escalade en cas d’information manquante | Éviter les réponses ou décisions non fondées |
+
+---
+
+## 15. Points à traiter dans la note de risques associée
+
+La note de risques séparée devra au minimum couvrir :
+
+- les décisions automatisées à effet financier au regard de l’article 22 du RGPD ;
+- la nécessité d’une intervention humaine réelle, informée et traçable ;
+- le risque de biais d’automatisation chez les conseillers ;
+- le risque qu’un pré-triage soit détourné en outil de surveillance individuelle ;
+- les erreurs ou biais présents dans l’historique des tickets ;
+- la minimisation des données personnelles dans les prompts et les traces ;
+- la gestion des accès, des secrets et des journaux ;
+- les risques d’injection de prompt et de contournement des outils ;
+- le risque de double remboursement ;
+- la gestion des indisponibilités et des données manquantes.
+
+---
+
+## 16. Conclusion
+
+L’architecture proposée remplace le bot monolithique par quatre agents spécialisés et contrôlés. Elle sépare clairement le renseignement, l’analyse d’éligibilité, le pré-triage et l’action financière.
+
+Le point central de l’architecture est la frontière entre **recommandation** et **exécution** : les agents peuvent rechercher, analyser et proposer, mais aucune action de remboursement ne peut être déclenchée sans une validation humaine explicite appliquée par un mécanisme technique bloquant.
+
+La modularité, les permissions minimales, les référentiels communs et la journalisation structurée doivent permettre au binôme de développer séparément les agents tout en conservant une architecture cohérente, testable et auditable.
